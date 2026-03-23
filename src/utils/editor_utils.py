@@ -1,6 +1,7 @@
 from tkinter import filedialog
 from tkinter import END
 from src.password_modal import create_window
+from src.new_password_modal import create_window as cw_new_password
 from src.crypto import encrypt_text, dectypt_text
 import time
 
@@ -58,9 +59,19 @@ def open_file(title, text, root, path="", event=None):
     with open(filepath, "rb") as f:
         content = f.read()
 
-    password = create_window(root)
+    data = create_window(root)
+    if not data:
+        return
     try:
-        decrypted_text = dectypt_text(content, password)
+        decrypted_text = dectypt_text(
+            content,
+            data["password"],
+            int(data["argon_time"]),
+            int(data["argon_memory"]),
+            int(data["argon_parallel"]),
+            int(data["salt"]),
+            int(data["nonce"])
+        )
     except:
         text.delete("1.0", END)
         text.insert("1.0", "Invalid password | Invalid file format | Corrupted file")
@@ -82,10 +93,19 @@ def save_file(title, text, root, event=None):
             return
         current_file = filepath
 
-    password = create_window(root)
-    if password == "":
+    data = cw_new_password(root)
+    if not data:
         return
-    encrypted_text = encrypt_text(text.get("1.0", END), password)
+
+    encrypted_text = encrypt_text(
+        text.get("1.0", END),
+        data["password"],
+        int(data["argon_time"]),
+        int(data["argon_memory"]),
+        int(data["argon_parallel"]),
+        int(data["salt"]),
+        int(data["nonce"])
+    )
 
     with open(current_file, "wb") as f:
         f.write(encrypted_text)
@@ -95,7 +115,7 @@ def save_file(title, text, root, event=None):
 # Отображение времени и текущей версии приложения
 def update_time(status_label_r, root):
     now = time.strftime("%H:%M:%S")
-    status_label_r.config(text=f"{now} | V1.0.0")
+    status_label_r.config(text=f"{now} | V1.1.0")
     root.after(1000, update_time, status_label_r, root)
 
 # Закрытие окна
